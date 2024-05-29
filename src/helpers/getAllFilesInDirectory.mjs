@@ -1,12 +1,12 @@
-import chalk from "chalk";
+import chalk from "chalk"
 import { lstatSync, readdirSync } from "fs";
-import { lstat, readdir } from "fs/promises";
-import path from "path";
+import { lstat, readdir } from  "fs/promises"
+import path from "path"
 
 export const getAllFilesInDirectoryAsync = async (
-  dir: string,
-  arrayOfFiles: string[] = []
-): Promise<string[]> => {
+  dir,
+  arrayOfFiles= []
+) => {
   const excludedDirectories = [
     "C:\\Windows",
     "C:\\Program Files",
@@ -22,10 +22,10 @@ export const getAllFilesInDirectoryAsync = async (
       return arrayOfFiles;
     }
 
-    const files: string[] = await readdir(dir);
+    const files = await readdir(dir);
 
     for (const file of files) {
-      const fullPath: string = path.join(dir, file);
+      const fullPath = path.join(dir, file);
       const stats = await lstat(fullPath);
 
       if (stats.isFile()) {
@@ -34,9 +34,10 @@ export const getAllFilesInDirectoryAsync = async (
         await getAllFilesInDirectoryAsync(fullPath, arrayOfFiles);
       }
     }
-  } catch (err: unknown) {
-    if (err instanceof Error && (err as NodeJS.ErrnoException).code) {
-      const errorCode = (err as NodeJS.ErrnoException).code;
+  } catch (err) {
+    console.log('error here')
+    if (err.code) {
+      const errorCode = err.code;
       if (errorCode === "EPERM" || errorCode === "EACCES") {
         console.warn(chalk.blue(`Skipping unauthorized directory: ${dir}`));
       } else {
@@ -49,7 +50,7 @@ export const getAllFilesInDirectoryAsync = async (
   return arrayOfFiles;
 };
 
-export const getAllFilesInDirectorySync = (dir: string, arrayOfFiles: string[] = []) => {
+export const getAllFilesInDirectorySync = (dir, arrayOfFiles = []) => {
   const excludedDirectories = [
     "C:\\Windows",
     "C:\\Program Files",
@@ -66,10 +67,10 @@ export const getAllFilesInDirectorySync = (dir: string, arrayOfFiles: string[] =
       return arrayOfFiles;
     }
 
-    const files: string[] = readdirSync(dir);
+    const files = readdirSync(dir);
 
     for (const file of files) {
-      const fullPath: string = path.join(dir, file);
+      const fullPath = path.join(dir, file);
       try {
         const stats = lstatSync(fullPath);
 
@@ -79,8 +80,8 @@ export const getAllFilesInDirectorySync = (dir: string, arrayOfFiles: string[] =
           getAllFilesInDirectorySync(fullPath, arrayOfFiles);
         }
       } catch (err) {
-        if (err instanceof Error && (err as NodeJS.ErrnoException).code) {
-          const errorCode = (err as NodeJS.ErrnoException).code;
+        if (err.code) {
+          const errorCode = err.code;
           if (errorCode === "EPERM" || errorCode === "EACCES") {
             console.warn(
               chalk.blue(`Skipping unauthorized directory: ${fullPath}`)
@@ -96,8 +97,8 @@ export const getAllFilesInDirectorySync = (dir: string, arrayOfFiles: string[] =
       }
     }
   } catch (err) {
-    if (err instanceof Error && (err as NodeJS.ErrnoException).code) {
-      const errorCode = (err as NodeJS.ErrnoException).code;
+    if (err.code) {
+      const errorCode = err.code;
       if (errorCode === "EPERM" || errorCode === "EACCES") {
         console.warn(chalk.blue(`Skipping unauthorized directory: ${dir}`));
       } else {
@@ -109,3 +110,4 @@ export const getAllFilesInDirectorySync = (dir: string, arrayOfFiles: string[] =
   }
   return arrayOfFiles;
 };
+

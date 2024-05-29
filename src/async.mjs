@@ -1,20 +1,15 @@
-import Fuse from "fuse.js";
 import inquirer from "inquirer";
+import Fuse from "fuse.js";
 import path from "path";
-import { deleteFileAsync } from "./helpers/deleteFile";
-import { getAllFilesInDirectoryAsync } from "./helpers/getAllFilesInDirectory";
+import { deleteFileAsync } from "./helpers/deleteFile.mjs";
+import { getAllFilesInDirectoryAsync } from "./helpers/getAllFilesInDirectory.mjs";
 
-type Choice = {
-  name: string;
-  path?: string;
-};
-
-export const findAndDeleteFileAsync = async (): Promise<void> => {
+export const findAndDeleteFileAsync = async () => {
   const directoryAnswer = await inquirer.prompt([
     {
       type: "input",
       name: "directory",
-      message: "Please enter directory:",
+      message: "Please enter directory(async):",
     },
   ]);
 
@@ -24,29 +19,30 @@ export const findAndDeleteFileAsync = async (): Promise<void> => {
     {
       type: "input",
       name: "searchName",
-      message: "Please enter file name:",
+      message: "Please enter file name(async):",
     },
   ]);
   const { searchName } = searchNameAnswer;
 
   try {
-    const files: string[] = await getAllFilesInDirectoryAsync(directory);
-    const fileNames: string[] = files.map((filePath) =>
-      path.basename(filePath)
-    );
+    const files = await getAllFilesInDirectoryAsync(directory);
+    const fileNames = files.map((filePath) => ({
+      name: path.basename(filePath),
+      path: filePath,
+    }));
 
-    const fuse = new Fuse(fileNames, { includeScore: true });
-    const results = fuse.search(searchName);
+    const results = fileNames.filter((file) => file.name.includes(searchName));
+    spinner.succeed(`Found ${results.length} files`);
 
     if (results.length === 0) {
       return console.log(`No file found matching ${searchName}`);
     } else {
-      const choices: Choice[] = results.map((result) => ({
+      const choices = results.map((result) => ({
         name: result.item,
         path: files.find((file) => path.basename(file) === result.item),
       }));
 
-      const answer = await inquirer.prompt<{ fileToDelete: string }>([
+      const answer = await inquirer.prompt([
         {
           type: "list",
           name: "fileToDelete",
@@ -55,7 +51,7 @@ export const findAndDeleteFileAsync = async (): Promise<void> => {
         },
       ]);
 
-      const confirm = await inquirer.prompt<{ confirmDelete: boolean }>([
+      const confirm = await inquirer.prompt([
         {
           type: "confirm",
           name: "confirmDelete",
@@ -77,7 +73,9 @@ export const findAndDeleteFileAsync = async (): Promise<void> => {
       }
     }
   } catch (err) {
-    console.error(err);
+    console.error("err", err);
     return;
   }
 };
+
+// module.exports.findAndDeleteFileAsync = findAndDeleteFileAsync

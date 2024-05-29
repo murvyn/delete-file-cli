@@ -2,7 +2,7 @@ import chalk from "chalk";
 import { unlinkSync } from "fs";
 import { unlink } from "fs/promises";
 
-export const deleteFileAsync = (filePath: string): void => {
+export const deleteFileAsync = (filePath) => {
   unlink(filePath.trim())
     .then(() => console.log(chalk.green("File deleted successfully")))
     .catch((err) => {
@@ -16,7 +16,7 @@ export const deleteFileAsync = (filePath: string): void => {
     });
 };
 
-export const deleteFileSync = (filePath: string): void => {
+export const deleteFileSync = (filePath) => {
   try {
     unlinkSync(filePath.trim());
     console.log(chalk.green("File deleted successfully"));
@@ -30,4 +30,6 @@ export const deleteFileSync = (filePath: string): void => {
     }
   }
 };
+
+
 

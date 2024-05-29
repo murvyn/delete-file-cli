@@ -1,14 +1,10 @@
-import { Command } from "commander";
-import Fuse from "fuse.js";
-import fs from "fs";
 import path from "path";
 import inquirer from "inquirer";
 import chalk from "chalk";
 import ora from "ora";
-import { deleteFileSync } from "./helpers/deleteFile";
-import { getAllFilesInDirectorySync } from "./helpers/getAllFilesInDirectory";
-
-const program = new Command();
+import { deleteFileSync } from "./helpers/deleteFile.mjs";
+import { getAllFilesInDirectorySync } from "./helpers/getAllFilesInDirectory.mjs";
+import { performance } from "perf_hooks";
 
 let isCancelled = false;
 
@@ -19,17 +15,12 @@ process.on("SIGINT", () => {
   process.exit(1); // Exit with error code
 });
 
-type Choice = {
-  name: string;
-  path?: string;
-};
-
-export const findAndDeleteFileSync = async (): Promise<void> => {
+export const findAndDeleteFileSync = async () => {
   const directoryAnswer = await inquirer.prompt([
     {
       type: "input",
       name: "directory",
-      message: "Please enter directory:",
+      message: "Please enter directory(sync):",
     },
   ]);
 
@@ -39,38 +30,42 @@ export const findAndDeleteFileSync = async (): Promise<void> => {
     {
       type: "input",
       name: "searchName",
-      message: "Please enter file name:",
+      message: "Please enter file name(sync):",
     },
   ]);
   const { searchName } = searchNameAnswer;
   try {
     const spinner = ora("Searching for file(s)").start();
 
-    const files: string[] | undefined = getAllFilesInDirectorySync(directory);
+    const startTime = performance.now()
+
+    const files = getAllFilesInDirectorySync(directory);
     if (!files) {
       spinner.fail("Something went wrong");
       return;
     }
-    const fileNames: string[] = files?.map((filePath) =>
-      path.basename(filePath)
-    );
+    const fileNames = files?.map((filePath) => ({
+      name: path.basename(filePath),
+      path: filePath
+    }));
 
-    spinner.succeed(`Found ${fileNames.length} files`);
+    const results = fileNames.filter((file) => file.name.includes(searchName));
+    const endTime = performance.now()
+    const totalTime = endTime - startTime
+    spinner.succeed(`Found ${results.length} files in ${totalTime}`);
 
-    const fuse = new Fuse(fileNames, { includeScore: true });
-    const results = fuse.search(searchName);
 
     if (results.length === 0) {
       console.log(chalk.yellow(`No file found matching ${searchName}`));
 
       return;
     } else {
-      const choices: Choice[] = results.map((result) => ({
-        name: result.item,
-        path: files.find((file) => path.basename(file) === result.item),
+      const choices = results.map((result) => ({
+        name: result.name,
+        path: result.path,
       }));
 
-      const answer = await inquirer.prompt<{ fileToDelete: string }>([
+      const answer = await inquirer.prompt([
         {
           type: "list",
           name: "fileToDelete",
@@ -84,7 +79,7 @@ export const findAndDeleteFileSync = async (): Promise<void> => {
         return;
       }
 
-      const confirm = await inquirer.prompt<{ confirmDelete: boolean }>([
+      const confirm = await inquirer.prompt([
         {
           type: "confirm",
           name: "confirmDelete",
@@ -92,6 +87,7 @@ export const findAndDeleteFileSync = async (): Promise<void> => {
           default: false,
         },
       ]);
+
       if (confirm.confirmDelete) {
         const res = choices.find(
           (choice) => choice.name === answer.fileToDelete

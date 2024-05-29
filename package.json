@@ -1,12 +1,12 @@
 {
   "name": "delete-file-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple CLI to delete a file based on fuzzy search",
   "main": "src/index.mjs",
-   "type": "module",
-   "bin": {
+  "type": "module",
+  "bin": {
     "delete-file-cli": "./src/index.mjs"
-   },
+  },
   "scripts": {
     "start": "node src/index.mjs"
   },
@@ -14,7 +14,13 @@
     "type": "git",
     "url": "git+https://github.com/murvyn/delete-file-cli.git"
   },
-  "keywords": ["cli", "delete", "file", "fuzzy", "search"],
+  "keywords": [
+    "cli",
+    "delete",
+    "file",
+    "fuzzy",
+    "search"
+  ],
   "author": "Marvin Asamoah <marvin.asamoah.123@gmail.com>",
   "license": "ISC",
   "dependencies": {

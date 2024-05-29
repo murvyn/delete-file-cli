@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { findAndDeleteFileAsync } from "./async.mjs";
 import { Command } from "commander";
 import chalk from "chalk";
